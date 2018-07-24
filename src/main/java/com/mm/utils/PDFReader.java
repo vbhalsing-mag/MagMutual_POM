@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import javax.management.relation.InvalidRelationServiceException;
+
 import org.apache.pdfbox.cos.COSDocument;
 import org.apache.pdfbox.io.RandomAccessRead;
 import org.apache.pdfbox.pdfparser.PDFParser;
@@ -21,26 +23,46 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.interactions.Action;
 import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.PageFactory;
+import org.testng.Assert;
 
+import com.mm.dto.pdfReaderDTO;
+import com.mm.pages.PolicyBinderPage;
+import com.mm.pages.RateApolicyPage;
 import com.relevantcodes.extentreports.LogStatus;
 
 import bsh.Parser;
 
-public class PDFReader {
+public class PDFReader extends CommonAction {
 	CommonUtilities comUtil = new CommonUtilities();
-
+	WebDriver driver;
+	pdfReaderDTO pdfreaderdto;
+	int i =0;
+	String ExcelPath = System.getProperty("user.dir")+"\\src\\main\\resources\\Form_Data.xlsx";
+	
 	//AUTOIT script execution to save PDF.
-	public void savePDF() throws IOException {
-		String[] savePDFPath = {
-				System.getProperty("user.dir") + "\\src\\main\\resources\\StoredPDF\\pdfDocument.pdf" };
-		String[] executionPath = { System.getProperty("user.dir") + "\\src\\main\\java\\autoItScripts\\savePdf.exe" };
-		Runtime.getRuntime().exec(System.getProperty("user.dir") + "\\src\\main\\java\\autoItScripts\\savePdf.exe",
-				savePDFPath);
-		// ProcessBuilder pb = new ProcessBuilder(executionPath);
+	public PDFReader savePDF() throws IOException, InterruptedException {
+		//invisibilityOfLoader(driver);
+		Thread.sleep(6000);
+		String[] savePDFPath = 
+				{System.getProperty("user.dir") + "\\src\\main\\resources\\StoredPDF\\pdfDocument.pdf"};
+		String[] executionPath = {System.getProperty("user.dir") + "\\src\\main\\java\\autoItScripts\\savePdf.exe"};
+		Runtime.getRuntime().exec(executionPath);
+		//ProcessBuilder pb = new ProcessBuilder(executionPath);
+		return new PDFReader(driver);
+	}
+	
+	public PDFReader(WebDriver driver)
+	{
+		this.driver = driver;
+		PageFactory.initElements(driver, this);
+		pdfreaderdto = new pdfReaderDTO();
 	}
 
 	//Logic to verify PDF content.
-	public boolean verifyPdfContent(String content) throws IOException, AWTException, InterruptedException {
+	public PolicyBinderPage verifyPdfContent(String PolicyNo) throws Exception {
+		Thread.sleep(15000);
+		//getPageTitle(driver, "Policy Folder "+PolicyNo);
 		boolean flag = false;
 		PDFTextStripper pdfStripper = null;
 		PDDocument pdDoc = null;
@@ -49,7 +71,7 @@ public class PDFReader {
 		int noOfPDFPages = 0;
 
 		try {
-			File file = new File(System.getProperty("user.dir") + "\\src\\main\\resources\\StoredPDF\\pdfDocument.pdf");
+			File file = new File("C:\\savePDF\\verifyPDF.pdf");
 			pdDoc = PDDocument.load(file);
 			noOfPDFPages = pdDoc.getNumberOfPages();
 			pdfStripper = new PDFTextStripper();
@@ -67,11 +89,16 @@ public class PDFReader {
 				e.printStackTrace();
 			}
 		}
-		if (parsedText.contains(content)) {
-			flag = true;
-			ExtentReporter.logger.log(LogStatus.INFO, "Verify footer display '" + content + "'.");
+		try {
+			  for (i =0;i<pdfreaderdto.verifyPDFcontent.size();i++)
+				{
+				Assert.assertTrue(parsedText.contains(pdfreaderdto.verifyPDFcontent.get(i)), "Footer dose not content '" + pdfreaderdto.verifyPDFcontent.get(i) + "'.");
+				ExtentReporter.logger.log(LogStatus.INFO, "Verify footer display '" + pdfreaderdto.verifyPDFcontent.get(i) + "'.");
+				break;
+			}
+		}catch (Exception e){
+				ExtentReporter.logger.log(LogStatus.FAIL, "Expceted value  is not present in PDF.");
 		}
-		ExtentReporter.logger.log(LogStatus.INFO, "Footer dose not content '" + content + "'.");
-		return flag;
+		return new PolicyBinderPage(driver);
 	}
 }

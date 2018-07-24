@@ -1,89 +1,109 @@
 package com.mm.pages;
 
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
+import com.mm.dto.PolicySubmissionPageDTO;
 import com.mm.utils.CommonAction;
 import com.mm.utils.ExtentReporter;
+import com.mm.utils.PDFReader;
 import com.relevantcodes.extentreports.LogStatus;
 
 public class PolicySubmissionPage extends CommonAction {
-	
-	//Global Assignment/initialization of variables.
+
+	// Global Assignment/initialization of variables.
 	WebDriver driver;
-	String indicationPhaseValue="INDICATION";
+	String indicationPhaseValue = "INDICATION";
 	String valueOfPolicyActionCopy = "javascript:copyQuote();";
-	
-	//Element repository for Policy Submission page.
-	@FindBy(id="PM_COMMON_TABS_SAVEWIP")
+	PolicyIndicationPage policyIndicationPage;
+	PolicySubmissionPageDTO policysubmissionpageDTO;
+
+	// Element repository for Policy Submission page.
+	@FindBy(id = "PM_COMMON_TABS_SAVEWIP")
 	WebElement saveWIP;
-	
-	@FindBy(name="policyPhaseCode")
+
+	@FindBy(name = "policyPhaseCode")
 	WebElement policyPhase;
-	
-	@FindBy(xpath="//div[@id='globalDropdownActionItems']//select[@class='globalActionItemList']")
+
+	@FindBy(xpath = "//div[@id='globalDropdownActionItems']//select[@class='globalActionItemList']")
 	WebElement policyAction;
-	
-	@FindBy(name="policyPhaseCode")
+
+	@FindBy(name = "policyPhaseCode")
 	WebElement Phase;
-	
-	@FindBy(name="organizationTypeCode")
+
+	@FindBy(name = "organizationTypeCode")
 	WebElement Org_Type;
-	
-	@FindBy(name="discoveryPeriodRating")
+
+	@FindBy(name = "discoveryPeriodRating")
 	WebElement Hosp_Disc_Period_Rating;
-	
-	@FindBy(name="termDesc")
+
+	@FindBy(name = "termDesc")
 	WebElement Quote_Description;
-	
-	@FindBy(id="PM_COMMON_TABS_SAVEWIP")
+
+	@FindBy(id = "PM_COMMON_TABS_SAVEWIP")
 	WebElement Save_WIP;
-	
-	//Constructor to initialize elements on policy submission page.
+
+	// Constructor to initialize driver, page elements and DTO PageObject for
+	// PolicySubmissionPage
 	public PolicySubmissionPage(WebDriver driver)
-	{
+			throws IllegalArgumentException, IllegalAccessException, SecurityException {
 		this.driver = driver;
 		PageFactory.initElements(driver, this);
+		policysubmissionpageDTO = new PolicySubmissionPageDTO();
 	}
-	
-	//Select Copy from Action value from Action drop down.
-	public void copyFromActionDropDown(String policyNum) throws InterruptedException
-	{
-		selectDropdownByValue(driver,policyAction, valueOfPolicyActionCopy, "Policy Action");
+
+	// Select Copy from Action value from Action drop down.
+	public PolicySubmissionPage copyFromPolicyActionDropDown(String policyNum)
+			throws IllegalArgumentException, IllegalAccessException, SecurityException, InterruptedException {
 		ExtentReporter.logger.log(LogStatus.INFO, "Click Policy Actions>Copy");
+		selectDropdownByVisibleText(driver,policyAction, policysubmissionpageDTO.valueOfPolicyActionCopy, "Policy Action");
 		Thread.sleep(3000);
+		return new PolicySubmissionPage(driver);
+
 	}
-	
-	
-	//Change policy phase to indication.
-	public void changePhaseToIndication() throws InterruptedException
-	{
-		selectDropdownByValue(driver,policyPhase, indicationPhaseValue, "Phase");
-		ExtentReporter.logger.log(LogStatus.INFO, "Change Policy Phase to Indication");
+
+	// Change policy phase to indication.
+	public PolicySubmissionPage changePhaseToIndicationAndAddQuoteDescription()
+			throws InterruptedException, IllegalArgumentException, IllegalAccessException, SecurityException {
 		Thread.sleep(3000);
+		ExtentReporter.logger.log(LogStatus.INFO, "Change Policy Phase to Indication");
+		selectDropdownByValue(driver,policyPhase, policysubmissionpageDTO.indicationPhaseValue, "Phase");
+		enterTextIn(driver, Quote_Description, policysubmissionpageDTO.quoteDescription, "Quote Description");
+		Thread.sleep(1000);
+		return new PolicySubmissionPage(driver);
 	}
 	
 	//Save policy / Quote as Work in progress.
-	public void saveWip() throws InterruptedException
+	public PolicyQuotePage saveWip() throws Exception
 	{
 		clickButton(driver, saveWIP, "Save WIP");
-		ExtentReporter.logger.log(LogStatus.INFO, "Click Save WIP");
 		Thread.sleep(2000);
+		return new PolicyQuotePage(driver);
 	}
 	
-	// Update policy details for a policy and change policy phase from Submission to Indication.
-	public void updatePolicyDetails() throws InterruptedException{
-		
-		waitForElementToLoad(driver, 30, Phase);
-		selectDropdownByValue(driver, Phase, "INDICATION", "Phase");
-		selectDropdownByValue(driver, Org_Type, "HOSPITAL", "Organisation Type");
-		enterTextIn(driver, Hosp_Disc_Period_Rating, "2");
-		enterTextIn(driver, Quote_Description, "Automated Test");
-		click(driver, Save_WIP, "Save WIP button");
+
+	// Update policy details for a policy and change policy phase from
+	// Submission to Indication.
+	public PolicyIndicationPage updatePolicyDetails() throws Exception {
+	
+		invisibilityOfLoader(driver);
+		Thread.sleep(5000);
+		//TODO-add get page title
+		//waitForElementToLoad(driver, 20, Phase);
+	    //Change policy type to Indication and add organization type as Hospital from DDL
+		selectDropdownByValue(driver, Phase, policysubmissionpageDTO.policyPhase, "Phase");
+		selectDropdownByValue(driver, Org_Type, policysubmissionpageDTO.organisationType, "Organisation Type");
+		Thread.sleep(2000);
+		//Add Discovery period rating, Quote Description and save as WIP
+		enterTextIn(driver, Hosp_Disc_Period_Rating,policysubmissionpageDTO.discoveryPeriodRating, "Discovery_Period Rating");
+		enterTextIn(driver, Quote_Description, policysubmissionpageDTO.quoteDescription, "Quote Description");
 		ExtentReporter.logger.log(LogStatus.INFO, "Indication saved as WIP");
+		click(driver, Save_WIP, "Save WIP button");
+		return new PolicyIndicationPage(driver);
 	}
-
-
 }

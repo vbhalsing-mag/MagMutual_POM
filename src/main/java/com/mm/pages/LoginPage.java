@@ -12,6 +12,7 @@ import org.testng.Assert;
 
 import com.mm.utils.ExcelUtil;
 import com.mm.utils.ExtentReporter;
+import com.mm.dto.LoginPageDTO;
 import com.mm.utils.CommonAction;
 import com.relevantcodes.extentreports.LogStatus;
 
@@ -19,6 +20,7 @@ public class LoginPage extends CommonAction{
 	
 	//Global Assignment/initialization of variables.
 	WebDriver driver;
+	
 	
 	//Element repository for Login page.
 	@FindBy(name="j_username")
@@ -31,17 +33,19 @@ public class LoginPage extends CommonAction{
 	WebElement loginBtn;
 	
 	//Constructor to initialize elements on Login page.
-	public LoginPage(WebDriver driver)
+	public LoginPage(WebDriver driver) throws IllegalArgumentException, IllegalAccessException, SecurityException
 	{
 		this.driver=driver;
 		PageFactory.initElements(driver, this);
+		
 	}
 
 	//Code to login to eOasis application.
-	public void loginToeOasis(String UserName, String PassWord) throws Exception
+	public HomePage loginToeOasis(String UserName, String PassWord) throws Exception
 	{
 		ExcelUtil exlutil = new ExcelUtil();
-		driver.get("http://oasiscloud2017t:8081/oas17bts/CS/login.jsp");
+		//driver.get("http://oasiscloud2017t:8081/oas17bts/CS/login.jsp");
+		driver.get("http://172.18.1.107:9080/magsoasisqa/CS/login.jsp");
 		ExtentReporter.logger.log(LogStatus.INFO, "Accessing the URL - http://oasiscloud2017t:8081/oas17bts/CS/login.jsp");
 		driver.manage().deleteAllCookies();
 		driver.manage().window().maximize();
@@ -76,5 +80,6 @@ public class LoginPage extends CommonAction{
 			{
 				ExtentReporter.logger.log(LogStatus.FAIL, "Issue with login button.");
 			}
+		return new HomePage(driver);
 	}
 }
